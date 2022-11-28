@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -94,4 +96,17 @@ func LogErrorf(format string, a ...any) error {
 func FLogErrorf(w io.Writer, format string, a ...any) error {
 	_, err := fmt.Fprintf(w, "::error::"+format+"\n", a...)
 	return err
+}
+
+// GetRunURL attemtps to construct a URL to the action run from environment
+// variables exposed during workflow execution.
+func GetRunURL() (string, error) {
+	u, err := url.Parse(os.Getenv("GITHUB_SERVER_URL"))
+	if err != nil {
+		return "", fmt.Errorf("parsing server url: %w", err)
+	}
+
+	u.Path = path.Join(os.Getenv("GITHUB_REPOSITORY"), "actions", "runs", os.Getenv("GITHUB_RUN_ID"))
+
+	return u.String(), nil
 }
